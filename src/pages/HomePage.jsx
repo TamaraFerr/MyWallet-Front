@@ -1,49 +1,69 @@
 import styled from "styled-components"
 import { BiExit } from "react-icons/bi"
 import { AiOutlineMinusCircle, AiOutlinePlusCircle } from "react-icons/ai"
+import { useContext } from "react"
+import AuthContext from "../contexts/AuthContext"
+import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
+import axios from "axios"
+import TransactionsItens from "../components/TransactionsItens"
+import { useState } from "react"
 
 export default function HomePage() {
+  const {usuarioName, token, setToken, setUsuarioName} = useContext(AuthContext)
+  const [transacao, setTransacao] = useState([])
+  const config = {headers: {authorization: `Bearer ${token}`}}
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if(!token || !usuarioName){
+      navigate("/")
+    }
+
+    axios.get(`${import.meta.env.VITE_API_URL}/transactions`, config)
+    .then(res => setTransacao(res.data))
+    .catch(err => alert(err.response.data))
+  }, [])
+
+  function logout(){
+
+    axios.post(`${import.meta.env.VITE_API_URL}/logout`, {}, config)
+    .then(() => {
+      setToken(undefined)
+      setUsuarioName(undefined)
+      localStorage.clear()
+      navigate("/")
+    })
+    .catch(err => alert(err.response.data))
+  }
+
   return (
     <HomeContainer>
       <Header>
-        <h1>Olá, Fulano</h1>
-        <BiExit />
+        <h1 data-test="user-name">Olá, {usuarioName}</h1>
+        <BiExit data-test="logout" onClick={logout}/>
       </Header>
 
       <TransactionsContainer>
         <ul>
-          <ListItemContainer>
-            <div>
-              <span>30/11</span>
-              <strong>Almoço mãe</strong>
-            </div>
-            <Value color={"negativo"}>120,00</Value>
-          </ListItemContainer>
-
-          <ListItemContainer>
-            <div>
-              <span>15/11</span>
-              <strong>Salário</strong>
-            </div>
-            <Value color={"positivo"}>3000,00</Value>
-          </ListItemContainer>
+          {transacao.map((tra) => <TransactionsItens key={tra._id} transacoes={tra}/>)}
         </ul>
 
         <article>
           <strong>Saldo</strong>
-          <Value color={"positivo"}>2880,00</Value>
+          <Value color={"positivo"} data-test="total-amount">2880,00</Value>
         </article>
       </TransactionsContainer>
 
 
       <ButtonsContainer>
-        <button>
+        <button data-test="new-income">
           <AiOutlinePlusCircle />
           <p>Nova <br /> entrada</p>
         </button>
-        <button>
+        <button data-test="new-expense">
           <AiOutlineMinusCircle />
-          <p>Nova <br />saída</p>
+          <p>Nova <br/>saída</p>
         </button>
       </ButtonsContainer>
 
@@ -107,6 +127,7 @@ const Value = styled.div`
   text-align: right;
   color: ${(props) => (props.color === "positivo" ? "green" : "red")};
 `
+
 const ListItemContainer = styled.li`
   display: flex;
   justify-content: space-between;
