@@ -25,6 +25,11 @@ export default function HomePage() {
     .catch(err => alert(err.response.data))
   }, [])
 
+  function somaTotal(){
+    const soma = transacao.reduce((anterior, atual) => atual.type === "entrada" ? anterior + atual.value : anterior - atual.value, 0)
+    return soma
+  }
+
   function logout(){
 
     axios.post(`${import.meta.env.VITE_API_URL}/logout`, {}, config)
@@ -51,17 +56,17 @@ export default function HomePage() {
 
         <article>
           <strong>Saldo</strong>
-          <Value color={"positivo"} data-test="total-amount">2880,00</Value>
+          <Value color={"positivo"} data-test="total-amount">{somaTotal()}</Value>
         </article>
       </TransactionsContainer>
 
 
       <ButtonsContainer>
-        <button data-test="new-income">
+        <button data-test="new-income" onClick={() => navigate("/nova-transacao/entrada")}>
           <AiOutlinePlusCircle />
           <p>Nova <br /> entrada</p>
         </button>
-        <button data-test="new-expense">
+        <button data-test="new-expense" onClick={() => navigate("/nova-transacao/saida")}>
           <AiOutlineMinusCircle />
           <p>Nova <br/>saída</p>
         </button>
